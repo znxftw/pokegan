@@ -1,3 +1,7 @@
+import os.path
+import re
+import shutil
+import requests
 import scrapy
 from scrapy.http import TextResponse
 
@@ -13,4 +17,20 @@ class PokemonSpider(scrapy.Spider):
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response: TextResponse, **kwargs):
-        print(response.body)
+        result = response.xpath('//img/@src').re(r'//archives.bulbagarden.net/media/upload/thumb/(.*).png')
+        base_file_path = os.path.dirname(__file__) + '\\..\\..\\images\\'
+        os.makedirs(base_file_path, exist_ok=True)
+
+        prepend = "https://archives.bulbagarden.net/media/upload/thumb/"
+        append = ".png"
+
+        for path in result:
+
+            enlarged = path.replace("70px", "200px")
+            full_url = prepend + enlarged + append
+
+            response = requests.get(full_url, stream=True)
+            image_name = re.search('200px-(.*).png', full_url, re.IGNORECASE).group(1)
+
+            with open(base_file_path + image_name + '.png', "wb") as f:
+                shutil.copyfileobj(response.raw, f)
