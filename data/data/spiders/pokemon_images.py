@@ -26,12 +26,9 @@ def process_image(path):
 class PokemonSpider(scrapy.Spider):
     name = "pokemon"
 
-    def start_requests(self):
-        urls = [
-            'https://bulbapedia.bulbagarden.net/wiki/List_of_Pokémon_by_National_Pokédex_number'
-        ]
-        for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse)
+    start_urls = [
+        'https://bulbapedia.bulbagarden.net/wiki/List_of_Pokémon_by_National_Pokédex_number'
+    ]
 
     def parse(self, response: TextResponse, **kwargs):
         result = response.xpath('//img/@src').re(r'//archives.bulbagarden.net/media/upload/thumb/(.*).png')
