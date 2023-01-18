@@ -16,10 +16,14 @@ def process_image(path):
     enlarged = path.replace("70px", "200px")
     full_url = prepend + enlarged + append
 
-    response = requests.get(full_url, stream=True)
     image_name = re.search('200px-(.*).png', full_url, re.IGNORECASE).group(1)
+    full_path = base_file_path + image_name + '.png'
 
-    with open(base_file_path + image_name + '.png', "wb") as f:
+    if os.path.exists(full_path):
+        return
+
+    response = requests.get(full_url, stream=True)
+    with open(full_path, "wb") as f:
         shutil.copyfileobj(response.raw, f)
 
 
