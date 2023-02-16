@@ -1,33 +1,9 @@
-import logging
 import os.path
-import re
-import shutil
 
-import requests
 import scrapy
 from scrapy.http import TextResponse
 
 base_file_path = os.path.dirname(__file__) + '\\..\\..\\images\\'
-
-
-def process_image(path):
-    prepend = "https://archives.bulbagarden.net/media/upload/thumb/"
-    append = ".png"
-
-    enlarged = path.replace("70px", "200px")
-    full_url = prepend + enlarged + append
-
-    image_name = re.search('200px-(.*).png', full_url, re.IGNORECASE).group(1)
-    full_path = base_file_path + image_name + '.png'
-
-    if os.path.exists(full_path):
-        logging.info(f"Skipping download for {image_name}...")
-        return
-
-    response = requests.get(full_url, stream=True)
-    with open(full_path, "wb") as f:
-        shutil.copyfileobj(response.raw, f)
-        logging.info(f"Completed download for {image_name}...")
 
 
 class PokemonSpider(scrapy.Spider):
