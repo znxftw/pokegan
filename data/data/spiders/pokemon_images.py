@@ -1,7 +1,8 @@
-import multiprocessing
+import logging
 import os.path
 import re
 import shutil
+
 import requests
 import scrapy
 from scrapy.http import TextResponse
@@ -20,11 +21,13 @@ def process_image(path):
     full_path = base_file_path + image_name + '.png'
 
     if os.path.exists(full_path):
+        logging.info(f"Skipping download for {image_name}...")
         return
 
     response = requests.get(full_url, stream=True)
     with open(full_path, "wb") as f:
         shutil.copyfileobj(response.raw, f)
+        logging.info(f"Completed download for {image_name}...")
 
 
 class PokemonSpider(scrapy.Spider):
@@ -39,5 +42,20 @@ class PokemonSpider(scrapy.Spider):
 
         os.makedirs(base_file_path, exist_ok=True)
 
-        with multiprocessing.Pool() as pool:
-            pool.map(process_image, result)
+        image_urls = []
+        for path in result:
+            prepend = "https://archives.bulbagarden.net/media/upload/thumb/"
+            append = ".png"
+
+            enlarged = path.replace("70px", "200px")
+            full_url = prepend + enlarged + append
+            image_urls.append(full_url)
+
+        image_item = ImageItem()
+        image_item['file_urls'] = image_urls
+        yield image_item
+
+
+class ImageItem(scrapy.Item):
+    file_urls = scrapy.Field()
+    files = scrapy.Field()
